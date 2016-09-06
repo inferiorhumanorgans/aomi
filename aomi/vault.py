@@ -14,7 +14,23 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def app_token(vault_client, app_id, user_id):
-    """Returns a vault token based on the app and user id."""
+    """
+    Returns a vault token based on the app and user id.
+    https://www.vaultproject.io/docs/auth/app-id.html
+    """
+    resp = vault_client.auth_app_id(app_id, user_id)
+    if 'auth' in resp and 'client_token' in resp['auth']:
+        return resp['auth']['client_token']
+    else:
+        problems('Unable to retrieve app token')
+
+
+def role_token(vault_client, role_id, secret_id):
+    """
+    Returns a vault token based on the role and secret ids.
+    https://www.vaultproject.io/docs/auth/approle.html
+    """
+    raise Exception("Not yet")
     resp = vault_client.auth_app_id(app_id, user_id)
     if 'auth' in resp and 'client_token' in resp['auth']:
         return resp['auth']['client_token']
@@ -33,6 +49,15 @@ def initial_token(vault_client, opt):
     if 'VAULT_TOKEN' in os.environ and len(os.environ['VAULT_TOKEN']) > 0:
         log('Token derived from VAULT_TOKEN environment variable', opt)
         return os.environ['VAULT_TOKEN'].strip()
+    elif 'VAULT_ROLE_ID' in os.environ and \
+         'VAULT_SECRET_ID' in os.environ and \
+         len(os.environ['VAULT_ROLE_ID']) > 0 and \
+         len(os.environ['VAULT_SECRET_ID']) > 0:
+        token = role_token(vault_client,
+                          os.environ['VAULT_ROLE_ID'].strip(),
+                          os.environ['VAULT_SECRET_ID'].strip())
+        log("Token derived from VAULT_ROLE_ID and VAULT_SECRET_ID", opt)
+        return token
     elif 'VAULT_USER_ID' in os.environ and \
          'VAULT_APP_ID' in os.environ and \
          len(os.environ['VAULT_USER_ID']) > 0 and \
