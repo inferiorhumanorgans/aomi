@@ -1,5 +1,6 @@
 """ Vault interactions """
 from __future__ import print_function
+import getpass
 import os
 import socket
 import hvac
@@ -87,9 +88,8 @@ def token_meta(operation, opt):
     meta = {
         'operation': operation,
         'hostname': socket.gethostname()
+        'username': getpass.getuser()
     }
-    if 'USER' in os.environ:
-        meta['unix_user'] = os.environ['USER']
 
     if opt.metadata:
         meta_bits = opt.metadata.split(',')
